@@ -1,0 +1,14 @@
+.app-lightbox{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.85);z-index:3000;opacity:0;pointer-events:none;transition:opacity .25s}
+.app-lightbox.open{opacity:1;pointer-events:auto}
+.app-lightbox .lb-viewport{width:100%;max-width:1200px;max-height:90vh;display:flex;align-items:center;justify-content:center;position:relative;padding:1rem;box-sizing:border-box}
+.app-lightbox .lb-img{max-width:100%;height:auto;max-height:calc(90vh - 80px);display:block;border-radius:4px;transition:opacity .2s;object-fit:contain}
+.app-lightbox .lb-caption{color:#fff;text-align:center;margin-top:.5rem;max-width:1200px}
+.app-lightbox .lb-btn{position:relative;background:transparent;border:none;color:#fff;font-size:2.4rem;padding:0 0.6rem;cursor:pointer;margin:0 6px}
+.app-lightbox .lb-viewport .lb-prev{order:0}
+.app-lightbox .lb-viewport .lb-next{order:2}
+.app-lightbox .lb-viewport .lb-img{order:1}
+.app-lightbox .lb-close{position:absolute;right:10px;top:10px;background:transparent;border:none;color:#fff;font-size:1.5rem}
+
+@media (max-width:600px){
+	.app-lightbox .lb-btn{font-size:1.6rem;margin:0 4px}
+}

@@ -1,0 +1,14 @@
+<%- include('partials/head') %>
+<%- include('partials/navbar') %>
+
+<% if (typeof fullWidth !== 'undefined' && fullWidth) { %>
+<main class="container-fluid p-0">
+  <%- body %>
+</main>
+<% } else { %>
+<main class="container my-5">
+  <%- body %>
+</main>
+<% } %>
+
+<%- include('partials/footer') %>

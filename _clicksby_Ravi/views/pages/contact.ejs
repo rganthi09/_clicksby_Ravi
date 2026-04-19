@@ -1,0 +1,32 @@
+<h2>Contact</h2>
+
+<% if (error) { %>
+  <div class="alert alert-danger"><%= error %></div>
+<% } %>
+<% if (success) { %>
+  <div class="alert alert-success"><%= success %></div>
+<% } %>
+
+<form id="contactForm" method="post" action="/contact">
+  <div class="mb-3">
+    <label class="form-label">Name</label>
+    <input name="name" class="form-control" value="<%= form && form.name ? form.name : '' %>" />
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Email</label>
+    <input name="email" type="email" class="form-control" value="<%= form && form.email ? form.email : '' %>" />
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Contact (phone)</label>
+    <input name="phone" type="tel" class="form-control" value="<%= form && form.phone ? form.phone : '' %>" />
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Type of event</label>
+    <input name="eventType" class="form-control" value="<%= form && form.eventType ? form.eventType : '' %>" placeholder="e.g. wedding, portrait, corporate" />
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Message</label>
+    <textarea name="message" class="form-control" rows="5"><%= form && form.message ? form.message : '' %></textarea>
+  </div>
+  <button class="btn btn-primary">Send</button>
+</form>

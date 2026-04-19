@@ -1,0 +1,58 @@
+<h2>Portfolio</h2>
+<!-- <p>Explore categories. Images are read automatically from <code>public/uploads/portfolio/&lt;category&gt;</code>.</p> -->
+
+<div class="mb-4" id="portfolioButtons">
+  <% categories.forEach(cat => { %>
+    <button class="btn btn-outline-primary me-2 portfolio-btn" data-cat="<%= cat %>"><%= cat.replace('-', ' ') %></button>
+  <% }) %>
+</div>
+
+  <div id="portfolioGallery">
+  <!-- Gallery will be populated by client-side JS -->
+  <div class="masonry" id="portfolioMasonry"></div>
+</div>
+
+<script id="galleriesData" type="application/json"><%- JSON.stringify(galleries) %></script>
+<script>
+  // client-side gallery switching
+  const galleries = JSON.parse(document.getElementById('galleriesData').textContent || '{}');
+  const defaultCategory = '<%= defaultCategory %>';
+  const buttons = document.querySelectorAll('.portfolio-btn');
+  const masonry = document.getElementById('portfolioMasonry');
+
+  function setActiveButton(cat) {
+    buttons.forEach(b => {
+      if (b.dataset.cat === cat) {
+        b.classList.remove('btn-outline-primary'); b.classList.add('btn-primary');
+      } else {
+        b.classList.remove('btn-primary'); b.classList.add('btn-outline-primary');
+      }
+    });
+  }
+
+  function showCategory(cat) {
+    masonry.innerHTML = '';
+    const imgs = galleries[cat] || [];
+    if (imgs.length === 0) {
+      masonry.innerHTML = '<div>No images</div>';
+      return;
+    }
+    imgs.forEach(src => {
+      const item = document.createElement('div');
+      item.className = 'masonry-item';
+      const img = document.createElement('img');
+      img.src = src;
+      img.loading = 'lazy';
+      img.className = 'lightbox-enabled';
+      item.appendChild(img);
+      masonry.appendChild(item);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    buttons.forEach(b => b.addEventListener('click', (e) => showCategory(e.currentTarget.dataset.cat) || setActiveButton(e.currentTarget.dataset.cat)));
+    // initial load
+    setActiveButton(defaultCategory);
+    showCategory(defaultCategory);
+  });
+</script>

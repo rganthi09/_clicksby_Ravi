@@ -1,0 +1,20 @@
+<div class="text-center mb-4">
+  <h1>Welcome to <%= process.env.SITE_TITLE || 'Clicks by Ravi' %></h1>
+  <p class="lead">A showcase of photography: life events, wildlife, portraits and landscapes.</p>
+  <a class="btn btn-primary" href="/portfolio">View Portfolio</a>
+</div>
+
+<section>
+  <h2 class="mb-3">Recent uploads</h2>
+  <% if (images && images.length) { %>
+    <div class="masonry" id="home-masonry">
+      <% images.forEach(function(img){ %>
+        <div class="masonry-item">
+          <img class="lightbox-enabled" src="<%= img.src %>" alt="<%= img.caption || '' %>" loading="lazy" data-caption="<%= img.caption || '' %>" />
+        </div>
+      <% }) %>
+    </div>
+  <% } else { %>
+    <p>No uploads yet. Add images to <code>public/uploads</code> to display them here.</p>
+  <% } %>
+</section>

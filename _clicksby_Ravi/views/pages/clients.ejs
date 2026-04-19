@@ -1,0 +1,14 @@
+<h2>Clients</h2>
+<!-- <p>Images from client sessions. Drop images into <code>public/uploads/clients</code> to add.</p> -->
+
+<div class="masonry">
+  <% if (!images || images.length === 0) { %>
+    <div><p>No images yet.</p></div>
+  <% } else { %>
+    <% images.forEach(img => { %>
+      <div class="masonry-item">
+  <img class="lightbox-enabled" src="<%= img.src %>" alt="<%= img.caption %>" loading="lazy" data-caption="<%= img.caption %>" />
+      </div>
+    <% }) %>
+  <% } %>
+</div>

@@ -1,0 +1,26 @@
+<header class="site-header">
+  <div class="header-inner">
+    <nav class="nav-left">
+      <a href="/" class="<%= currentPath === '/' ? 'active' : '' %>">Home</a>
+      <a href="/about" class="<%= currentPath === '/about' ? 'active' : '' %>">About</a>
+    </nav>
+
+    <div class="site-title"><a href="/">
+      <% if (typeof siteTitleLogo !== 'undefined' && siteTitleLogo) { %>
+        <img src="<%= siteTitleLogo %>" alt="<%= siteTitle %>" class="site-logo" />
+      <% } else { %>
+        <!-- Layered title: Wakanda font by default, fades to regular English font on hover -->
+        <span class="site-title-text" aria-label="Clicks by Ravi">
+          <span class="title-wakanda">_Clicksby_Ravi</span>
+          <span class="title-regular">Clicksby_Ravi</span>
+        </span>
+      <% } %>
+    </a></div>
+
+    <nav class="nav-right">
+      <a href="/portfolio" class="<%= currentPath.startsWith('/portfolio') ? 'active' : '' %>">Portfolio</a>
+      <a href="/clients" class="<%= currentPath === '/clients' ? 'active' : '' %>">Clients</a>
+      <a href="/contact" class="<%= currentPath === '/contact' ? 'active' : '' %>">Contact</a>
+    </nav>
+  </div>
+</header>

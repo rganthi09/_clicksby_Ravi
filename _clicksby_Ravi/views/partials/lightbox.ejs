@@ -1,0 +1,82 @@
+<div id="lightbox" class="lightbox" style="display:none;">
+  <button id="lbPrev" class="lb-btn lb-prev">‹</button>
+  <div class="lb-content">
+    <img id="lbImage" src="" alt="" />
+  </div>
+  <button id="lbNext" class="lb-btn lb-next">›</button>
+  <button id="lbClose" class="lb-close">✕</button>
+</div>
+
+<script>
+  (function(){
+    let currentList = [];
+    let currentIndex = 0;
+    const lightbox = document.getElementById('lightbox');
+    const lbImage = document.getElementById('lbImage');
+    const lbPrev = document.getElementById('lbPrev');
+    const lbNext = document.getElementById('lbNext');
+    const lbClose = document.getElementById('lbClose');
+
+    function openLightbox(list, index) {
+      currentList = list;
+      currentIndex = index;
+      lbImage.src = currentList[currentIndex];
+      lightbox.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      lbImage.focus();
+    }
+
+    function closeLightbox() {
+      lightbox.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
+    function showIndex(i) {
+      if (i < 0) i = currentList.length - 1;
+      if (i >= currentList.length) i = 0;
+      currentIndex = i;
+      lbImage.src = currentList[currentIndex];
+    }
+
+    // click handlers
+    lbPrev.addEventListener('click', () => showIndex(currentIndex - 1));
+    lbNext.addEventListener('click', () => showIndex(currentIndex + 1));
+    lbClose.addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
+
+    // keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (lightbox.style.display !== 'flex') return;
+      if (e.key === 'ArrowLeft') showIndex(currentIndex - 1);
+      if (e.key === 'ArrowRight') showIndex(currentIndex + 1);
+      if (e.key === 'Escape') closeLightbox();
+    });
+
+    // attach to all images with class lightbox-enabled when DOM ready
+    document.addEventListener('DOMContentLoaded', () => {
+      function gatherList(node) {
+        // collect visible images within the same gallery container
+        const gallery = node.closest('.masonry') || document;
+        return Array.from(gallery.querySelectorAll('img.lightbox-enabled')).map(i => i.src);
+      }
+
+      document.body.addEventListener('click', (e) => {
+        const img = e.target.closest && e.target.closest('img.lightbox-enabled');
+        if (!img) return;
+        const list = gatherList(img);
+        const index = list.indexOf(img.src);
+        openLightbox(list, index);
+      });
+    });
+  })();
+</script>
+
+<style>
+  .lightbox{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.85);z-index:2000}
+  .lb-content{max-width:90%;max-height:80%;}
+  .lb-content img{max-width:100%;max-height:100%;display:block;margin:0 auto}
+  .lb-btn{position:absolute;top:50%;transform:translateY(-50%);background:transparent;border:none;color:#fff;font-size:3rem;padding:0 1rem;cursor:pointer}
+  .lb-prev{left:1rem}
+  .lb-next{right:1rem}
+  .lb-close{position:absolute;right:1rem;top:1rem;background:transparent;border:none;color:#fff;font-size:1.5rem}
+</style>
