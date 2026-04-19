@@ -1,47 +1,77 @@
+/**
+ * Main application server for Clicks by Ravi.
+ * Initializes Express, configures middleware, defines template paths, and routes user traffic.
+ */
+
+// ==========================================
+// 1. Dependencies and Environment Setup
+// ==========================================
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const nodemailer = require('nodemailer');
 const multer = require('multer');
+const expressLayouts = require('express-ejs-layouts');
 
 const app = express();
-const expressLayouts = require('express-ejs-layouts');
 const PORT = process.env.PORT || 3000;
 
+// ==========================================
+// 2. View Engine and Layouts Setup
+// ==========================================
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(expressLayouts);
-app.set('layout', 'layout');
+app.set('layout', 'layout'); // Sets the default layout template
 
+// ==========================================
+// 3. Static Assets and Body Parsing
+// ==========================================
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true })); // Parses URL-encoded bodies for form submissions
 
-// expose current path and site title to templates for active link highlighting & title
+// ==========================================
+// 4. Global Template Middleware
+// ==========================================
+/**
+ * Middleware that runs on every request to inject standard variables into EJS templates.
+ * Provides active route tracking, dynamic branding, and layout visibility flags.
+ */
 app.use((req, res, next) => {
   res.locals.currentPath = req.path;
   res.locals.siteTitle = process.env.SITE_TITLE || 'Clicks by Ravi';
-  // if you place a logo at public/images/logo.png, expose it to templates
-  // prefer an uploaded logo at public/uploads/logo1_black.png if present
+  
+  // Conditionally assign logo path based on filesystem priority
   if (fs.existsSync(path.join(__dirname, 'public', 'images', 'logo1_black.png'))) {
     res.locals.siteTitleLogo = '/images/logo1_black.png';
   } else if (fs.existsSync(path.join(__dirname, 'public', 'images', 'logo.png'))) {
     res.locals.siteTitleLogo = '/images/logo.png';
   } else {
-    // generate a small SVG data URI as a fallback logo using the site title
+    // Generate an SVG data URI as an organic fallback logo
     const title = (process.env.SITE_TITLE || 'Clicks by Ravi').replace(/</g, '').replace(/>/g, '');
     const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='240' height='40'><rect fill='transparent' width='100%' height='100%'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Helvetica, Arial, sans-serif' font-size='14' fill='%23222'>${title.replace(/\s/g, '_').toUpperCase()}</text></svg>`;
     res.locals.siteTitleLogo = 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
   }
-  // remove header background image and placeholder — header will have no background image
+
+  // Define layout presentation flags
   res.locals.headerImage = null;
   res.locals.hasHeaderImage = false;
-  // no page background image by default
   res.locals.homeBackground = null;
+  
   next();
 });
 
-// Helper to fetch images from local folder
+// ==========================================
+// 5. Helper Functions
+// ==========================================
+/**
+ * Reads the public uploads folder to extract image metadata.
+ * Supports reading directly from a specified subfolder, checking for common image extensions.
+ * 
+ * @param {string} folderName - The relative path inside 'public/uploads' to scan.
+ * @returns {Promise<Array>} A list of image objects containing `src`, `caption`, and `filename`.
+ */
 async function readGallery(folderName) {
   try {
     const localDir = path.join(__dirname, 'public', 'uploads', folderName);
@@ -50,7 +80,7 @@ async function readGallery(folderName) {
 
     const allowed = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg']);
 
-    // read files (non-recursive). If folder contains subfolders (like portfolio/<cat>), attempt to list those too.
+    // Non-recursive folder traversal
     const entries = fs.readdirSync(localDir, { withFileTypes: true });
     for (const ent of entries) {
       if (ent.isFile()) {
@@ -59,7 +89,7 @@ async function readGallery(folderName) {
           images.push({ src: `/uploads/${folderName}/${ent.name}`, caption: '', filename: ent.name });
         }
       } else if (ent.isDirectory()) {
-        // list files in subdirectory
+        // Attempt one level deeper for subcategories
         const subdir = path.join(localDir, ent.name);
         const subFiles = fs.readdirSync(subdir, { withFileTypes: true });
         for (const sf of subFiles) {
@@ -77,15 +107,18 @@ async function readGallery(folderName) {
   }
 }
 
-// Collect all images from clients and portfolio folders for home page display
+/**
+ * Aggregates all uploaded client images and portfolio categories for the frontpage gallery display.
+ * @returns {Promise<Array>} An array of all compiled image entities.
+ */
 async function collectAllUploads() {
   const allImages = [];
-
-  // Get images from clients folder
+  
+  // Aggregate Client specific images
   const clientImages = await readGallery('clients');
   allImages.push(...clientImages);
 
-  // Get images from all portfolio categories
+  // Aggregate Portfolio specific images loop
   const portfolioCategories = ['life-events', 'wildlife', 'portraits', 'landscapes'];
   for (const cat of portfolioCategories) {
     const categoryImages = await readGallery(`portfolio/${cat}`);
@@ -95,56 +128,74 @@ async function collectAllUploads() {
   return allImages;
 }
 
+// ==========================================
+// 6. Page Routes
+// ==========================================
+const portfolioCategories = ['life-events', 'wildlife', 'portraits', 'landscapes'];
+
+/** Home Page Content Route */
 app.get('/', async (req, res) => {
   const images = await collectAllUploads();
   res.render('pages/home', { title: process.env.SITE_TITLE || 'Clicks by Ravi', images });
 });
 
+/** About Page Content Route */
 app.get('/about', async (req, res) => {
   const aboutImages = await readGallery('About');
-  const aboutImage = aboutImages.length > 0 ? aboutImages[0].src : 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80';
+  const aboutImage = aboutImages.length > 0 
+    ? aboutImages[0].src 
+    : 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80';
+    
   res.render('pages/about', { title: 'About', aboutImage });
 });
 
+/** Clients Deliverables / Snippets Route */
 app.get('/clients', async (req, res) => {
   const images = await readGallery('clients');
   res.render('pages/clients', { title: 'Clients', images });
 });
 
-const portfolioCategories = ['life-events', 'wildlife', 'portraits', 'landscapes'];
+/** Base Portfolio Showcase Route */
 app.get('/portfolio', async (req, res) => {
   const galleries = {};
-  // Fetch all categories in parallel
+  
+  // Parallel asynchronous fetching of all categories
   await Promise.all(portfolioCategories.map(async cat => {
     galleries[cat] = await readGallery(`portfolio/${cat}`);
   }));
 
-  // default landing category
   const defaultCategory = 'life-events';
   res.render('pages/portfolio', { title: 'Portfolio', galleries, categories: portfolioCategories, defaultCategory });
 });
 
+/** Portfolio Sub-Category Showcase Route */
 app.get('/portfolio/:category', async (req, res) => {
   const cat = req.params.category;
   if (!portfolioCategories.includes(cat)) return res.status(404).send('Not found');
+  
   const images = await readGallery(`portfolio/${cat}`);
   res.render('pages/portfolio-category', { title: `Portfolio - ${cat}`, category: cat, images });
 });
 
-// Contact form
+// ==========================================
+// 7. Contact Routes (Nodemailer Logic)
+// ==========================================
+/** Render initial interactive contact form */
 app.get('/contact', (req, res) => {
-  // provide default locals expected by the template to avoid ReferenceError
   res.render('pages/contact', { title: 'Contact', error: null, success: null, form: {} });
 });
 
+/** Post submission handler translating contact details into outgoing email. */
 app.post('/contact', async (req, res) => {
   const { name, email, message, phone, eventType } = req.body;
   if (!name || !email || !message) {
     return res.status(400).render('pages/contact', { title: 'Contact', error: 'Please fill Name, Email and Message', success: null, form: req.body });
   }
-  // Create transporter: prefer explicit SMTP settings, otherwise fall back to Ethereal in dev
+
   let transporter;
   let usingEthereal = false;
+  
+  // Determine transport approach based on environment secrets / nodes.
   if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
     transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
@@ -156,7 +207,6 @@ app.post('/contact', async (req, res) => {
       }
     });
   } else if (process.env.NODE_ENV !== 'production') {
-    // create a test account for dev using Ethereal
     try {
       const testAccount = await nodemailer.createTestAccount();
       transporter = nodemailer.createTransport({
@@ -181,8 +231,8 @@ app.post('/contact', async (req, res) => {
 
   const mailTo = process.env.MAIL_TO || 'ravi.clicksby@gmail.com';
   const mailFrom = process.env.MAIL_FROM || process.env.SMTP_USER || 'no-reply@example.com';
-
   const subject = `Website contact from ${name}`;
+  
   const bodyLines = [
     `Name: ${name}`,
     `Email: ${email}`,
@@ -215,12 +265,16 @@ app.post('/contact', async (req, res) => {
   }
 });
 
-// Local Storage for Multer
+// ==========================================
+// 8. Admin Interfacing & File Context Handlers
+// ==========================================
+/** Local storage strategy for incoming administrative file uploads */
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     let folder = 'home_gallery';
     const targetFolder = req.body.target || 'clients';
 
+    // Route storage logic depending on category properties
     if (targetFolder === 'clients') folder = 'clients';
     else if (targetFolder === 'portfolio') {
       const cat = req.body.category || 'life-events';
@@ -236,11 +290,13 @@ const storage = multer.diskStorage({
   }
 });
 
+// Middleware layer initialization for uploads
 const upload = multer({ storage: storage });
 
-// Admin upload endpoint
+/** Single Image Upload Endpoint - Restricted via simplistic secret check */
 app.post('/admin/upload', upload.single('image'), (req, res) => {
   const secret = req.query.secret || req.body.secret;
+  
   if (!secret || secret !== process.env.UPLOAD_SECRET) {
     return res.status(403).send('Forbidden');
   }
@@ -250,4 +306,9 @@ app.post('/admin/upload', upload.single('image'), (req, res) => {
   res.send(`Uploaded to: ${req.file.path}`);
 });
 
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+// ==========================================
+// 9. Startup Sequence Implementation
+// ==========================================
+app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+});
