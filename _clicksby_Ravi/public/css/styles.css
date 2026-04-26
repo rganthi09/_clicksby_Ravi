@@ -95,12 +95,33 @@ body {
   padding: 0 1rem
 }
 
+.site-header .nav-left {
+  display: flex;
+  flex: 1;
+  justify-content: flex-end;
+  gap: 2.5rem;
+  padding-right: 2.5rem;
+}
+
+.site-header .nav-right {
+  display: flex;
+  flex: 1;
+  justify-content: flex-start;
+  gap: 2.5rem;
+  padding-left: 2.5rem;
+}
+
+.site-header .site-title {
+  flex-shrink: 0;
+  text-align: center;
+}
+
 .site-header nav a {
   color: #222;
   text-decoration: none;
-  margin-right: 1.25rem;
   letter-spacing: 2px;
-  font-size: 0.9rem
+  font-size: 0.9rem;
+  white-space: nowrap;
 }
 
 .site-title a {
@@ -195,9 +216,18 @@ body {
     height: 64px
   }
 
+  .site-header .nav-left {
+    gap: 1rem;
+    padding-right: 1rem;
+  }
+
+  .site-header .nav-right {
+    gap: 1rem;
+    padding-left: 1rem;
+  }
+
   .site-header nav a {
     font-size: 0.8rem;
-    margin-right: 0.75rem
   }
 
   .site-logo {
